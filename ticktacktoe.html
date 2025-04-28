@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tic Tac Toe with Draw Detection</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      margin: 20px;
+      font-size: 2em;
+      color: #444;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: separate;
+      border-spacing: 5px;
+    }
+    td {
+      width: 100px;
+      height: 100px;
+      background-color: #fff;
+      border: 3px solid #008CBA;
+      border-radius: 10px;
+      font-size: 36px;
+      font-weight: bold;
+      color: #008CBA;
+      text-align: center;
+      vertical-align: middle;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    td:hover {
+      background-color: #e0f7fa;
+      transform: scale(1.1);
+    }
+    .winner {
+      color: #4CAF50;
+      font-weight: bold;
+      font-size: 1.5em;
+    }
+    .draw {
+      color: #FF9800;
+      font-weight: bold;
+      font-size: 1.5em;
+    }
+    .reset-btn, .mode-btn {
+      display: inline-block;
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 1em;
+      color: #fff;
+      background-color: #008CBA;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .reset-btn:hover, .mode-btn:hover {
+      background-color: #005f75;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe</h1>
+  <div>
+    <button class="mode-btn" onclick="startGame('1player')">vs computer</button>
+    <button class="mode-btn" onclick="startGame('2players')">2 Players</button>
+  </div>
+  <table id="board"></table>
+  <p id="message"></p>
+  <button class="reset-btn" onclick="initBoard()">Restart Game</button>
+
+  <script>
+    const boardSize = 3;
+    const board = document.getElementById("board");
+    const message = document.getElementById("message");
+    let currentPlayer;
+    let gameState;
+    let mode;
+
+    function checkWinner() {
+      for (let i = 0; i < boardSize; i++) {
+        if (gameState[i].every(cell => cell === currentPlayer) || 
+            gameState.map(row => row[i]).every(cell => cell === currentPlayer)) {
+          return true;
+        }
+      }
+      if (gameState.map((row, index) => row[index]).every(cell => cell === currentPlayer) ||
+          gameState.map((row, index) => row[boardSize - 1 - index]).every(cell => cell === currentPlayer)) {
+        return true;
+      }
+      return false;
+    }
+
+    function checkDraw() {
+      return gameState.flat().every(cell => cell !== null); // All cells filled
+    }
+
+    function computerMove() {
+      for (let row = 0; row < boardSize; row++) {
+        for (let col = 0; col < boardSize; col++) {
+          if (gameState[row][col] === null) {
+            gameState[row][col] = "O";
+            document.querySelector(`[data-position="${row},${col}"]`).textContent = "O";
+            return;
+          }
+        }
+      }
+    }
+
+    function handleCellClick(event) {
+      const cell = event.target;
+      const [row, col] = cell.dataset.position.split(",").map(Number);
+
+      if (gameState[row][col] === null) {
+        gameState[row][col] = currentPlayer;
+        cell.textContent = currentPlayer;
+
+        if (checkWinner()) {
+          message.textContent = `${currentPlayer} wins! 🎉`;
+          message.className = "winner";
+          board.removeEventListener("click", handleCellClick);
+          return;
+        } else if (checkDraw()) {
+          message.textContent = "It's a draw! 🤝";
+          message.className = "draw";
+          board.removeEventListener("click", handleCellClick);
+          return;
+        }
+
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+
+        if (mode === "1player" && currentPlayer === "O") {
+          computerMove();
+          if (checkWinner()) {
+            message.textContent = "O (Computer) wins! 🎉";
+            message.className = "winner";
+            board.removeEventListener("click", handleCellClick);
+            return;
+          } else if (checkDraw()) {
+            message.textContent = "It's a draw! 🤝";
+            message.className = "draw";
+            board.removeEventListener("click", handleCellClick);
+            return;
+          }
+          currentPlayer = "X"; // Back to the player
+        }
+      }
+    }
+
+    function initBoard() {
+      board.innerHTML = ""; 
+      gameState = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null));
+      for (let row = 0; row < boardSize; row++) {
+        const tr = document.createElement("tr");
+        for (let col = 0; col < boardSize; col++) {
+          const td = document.createElement("td");
+          td.dataset.position = `${row},${col}`;
+          tr.appendChild(td);
+        }
+        board.appendChild(tr);
+      }
+      board.addEventListener("click", handleCellClick);
+      message.textContent = ""; 
+      message.className = ""; 
+    }
+
+    function startGame(selectedMode) {
+      mode = selectedMode;
+      currentPlayer = "X"; 
+      initBoard();
+    }
+  </script>
+</body>
+</html>
